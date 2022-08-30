@@ -2282,12 +2282,14 @@ HighsStatus calculateColDuals(const HighsLp& lp, HighsSolution& solution) {
   return HighsStatus::kOk;
 }
 
-HighsStatus calculateRowValues(const HighsLp& lp, HighsSolution& solution) {
+HighsStatus calculateRowValues(HighsLp& lp, HighsSolution& solution) {
   // assert(solution.col_value.size() > 0);
   if (int(solution.col_value.size()) < lp.num_col_) return HighsStatus::kError;
 
   solution.row_value.clear();
   solution.row_value.assign(lp.num_row_, 0);
+
+  lp.ensureColwise();
 
   for (HighsInt col = 0; col < lp.num_col_; col++) {
     for (HighsInt i = lp.a_matrix_.start_[col];
