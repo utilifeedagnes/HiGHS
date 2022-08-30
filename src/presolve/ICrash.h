@@ -70,7 +70,7 @@ struct ICrashOptions {
 };
 
 struct Quadratic {
-  const HighsLp lp;
+  HighsLp lp;
   const ICrashOptions options;
   std::vector<ICrashIterationDetails> details;
 

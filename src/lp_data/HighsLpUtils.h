@@ -204,7 +204,7 @@ HighsStatus readSolutionFile(const std::string filename,
 void checkLpSolutionFeasibility(const HighsOptions& options, const HighsLp& lp,
                                 const HighsSolution& solution);
 
-HighsStatus calculateRowValues(const HighsLp& lp, HighsSolution& solution);
+HighsStatus calculateRowValues(HighsLp& lp, HighsSolution& solution);
 HighsStatus calculateRowValuesQuad(const HighsLp& lp, HighsSolution& solution);
 HighsStatus calculateColDuals(const HighsLp& lp, HighsSolution& solution);
 
