@@ -267,3 +267,7 @@ adlittle.lp
 qjh.mps
 
 *.whl
+bazel*
+
+# webdemo
+build_webdemo

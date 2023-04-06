@@ -22,7 +22,8 @@
 #include "presolve/HPresolve.h"
 #include "util/HighsIntegers.h"
 
-bool HighsMipSolverData::checkSolution(const std::vector<double>& solution) {
+bool HighsMipSolverData::checkSolution(
+    const std::vector<double>& solution) const {
   for (HighsInt i = 0; i != mipsolver.model_->num_col_; ++i) {
     if (solution[i] < mipsolver.model_->col_lower_[i] - feastol) return false;
     if (solution[i] > mipsolver.model_->col_upper_[i] + feastol) return false;
@@ -86,7 +87,7 @@ void HighsMipSolverData::startAnalyticCenterComputation(
     // due to early return in the root node evaluation
     Highs ipm;
     ipm.setOptionValue("solver", "ipm");
-    ipm.setOptionValue("run_crossover", false);
+    ipm.setOptionValue("run_crossover", kHighsOffString);
     ipm.setOptionValue("presolve", "off");
     ipm.setOptionValue("output_flag", false);
     ipm.setOptionValue("ipm_iteration_limit", 200);
@@ -253,7 +254,7 @@ double HighsMipSolverData::computeNewUpperLimit(double ub, double mip_abs_gap,
   return new_upper_limit;
 }
 
-bool HighsMipSolverData::moreHeuristicsAllowed() {
+bool HighsMipSolverData::moreHeuristicsAllowed() const {
   // in the beginning of the search and in sub-MIP heuristics we only allow
   // what is proportionally for the currently spent effort plus an initial
   // offset. This is because in a sub-MIP we usually do a truncated search and
@@ -340,6 +341,8 @@ void HighsMipSolverData::init() {
   postSolveStack.initializeIndexMaps(mipsolver.model_->num_row_,
                                      mipsolver.model_->num_col_);
   mipsolver.orig_model_ = mipsolver.model_;
+  feastol = mipsolver.options_mip_->mip_feasibility_tolerance;
+  epsilon = mipsolver.options_mip_->small_matrix_value;
   if (mipsolver.clqtableinit)
     cliquetable.buildFrom(mipsolver.orig_model_, *mipsolver.clqtableinit);
   cliquetable.setMinEntriesForParallelism(
@@ -347,8 +350,6 @@ void HighsMipSolverData::init() {
           ? mipsolver.options_mip_->mip_min_cliquetable_entries_for_parallelism
           : kHighsIInf);
   if (mipsolver.implicinit) implications.buildFrom(*mipsolver.implicinit);
-  feastol = mipsolver.options_mip_->mip_feasibility_tolerance;
-  epsilon = mipsolver.options_mip_->small_matrix_value;
   heuristic_effort = mipsolver.options_mip_->mip_heuristic_effort;
   detectSymmetries = mipsolver.options_mip_->mip_detect_symmetry;
 
@@ -583,6 +584,16 @@ void HighsMipSolverData::runSetup() {
         maxTreeSizeLog2 += (HighsInt)std::ceil(
             std::log2(std::min(1024.0, 1.0 + mipsolver.model_->col_upper_[i] -
                                            mipsolver.model_->col_lower_[i])));
+        // NB Since this is for counting the number of times the
+        // condition is true using the bitwise operator avoids having
+        // any conditional branch whereas using the logical operator
+        // would require a branch due to short circuit
+        // evaluation. Semantically both is equivalent and correct. If
+        // there was any code to be executed for the condition being
+        // true then there would be a conditional branch in any case
+        // and I would have used the logical to begin with.
+        //
+        // Hence any compiler warning can be ignored safely
         numBin += ((mipsolver.model_->col_lower_[i] == 0.0) &
                    (mipsolver.model_->col_upper_[i] == 1.0));
         break;
@@ -1581,7 +1592,7 @@ bool HighsMipSolverData::checkLimits(int64_t nodeOffset) const {
     if (mipsolver.modelstatus_ == HighsModelStatus::kNotset) {
       highsLogDev(options.log_options, HighsLogType::kInfo,
                   "reached node limit\n");
-      mipsolver.modelstatus_ = HighsModelStatus::kIterationLimit;
+      mipsolver.modelstatus_ = HighsModelStatus::kSolutionLimit;
     }
     return true;
   }
@@ -1589,8 +1600,8 @@ bool HighsMipSolverData::checkLimits(int64_t nodeOffset) const {
       num_leaves >= options.mip_max_leaves) {
     if (mipsolver.modelstatus_ == HighsModelStatus::kNotset) {
       highsLogDev(options.log_options, HighsLogType::kInfo,
-                  "reached leave node limit\n");
-      mipsolver.modelstatus_ = HighsModelStatus::kIterationLimit;
+                  "reached leaf node limit\n");
+      mipsolver.modelstatus_ = HighsModelStatus::kSolutionLimit;
     }
     return true;
   }
@@ -1600,7 +1611,7 @@ bool HighsMipSolverData::checkLimits(int64_t nodeOffset) const {
     if (mipsolver.modelstatus_ == HighsModelStatus::kNotset) {
       highsLogDev(options.log_options, HighsLogType::kInfo,
                   "reached improving solution limit\n");
-      mipsolver.modelstatus_ = HighsModelStatus::kIterationLimit;
+      mipsolver.modelstatus_ = HighsModelStatus::kSolutionLimit;
     }
     return true;
   }

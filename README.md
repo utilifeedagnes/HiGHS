@@ -1,6 +1,8 @@
 # HiGHS - Linear optimization software
 
 [![Build Status](https://github.com/ERGO-Code/HiGHS/workflows/build/badge.svg)](https://github.com/ERGO-Code/HiGHS/actions?query=workflow%3Abuild+branch%3Amaster)
+[![PyPi](https://img.shields.io/pypi/v/highspy.svg)](https://pypi.python.org/pypi/highspy)
+[![PyPi](https://img.shields.io/pypi/dm/highspy.svg)](https://pypi.python.org/pypi/highspy)
 
 HiGHS is a high performance serial and parallel solver for large scale sparse
 linear optimization problems of the form
@@ -31,7 +33,7 @@ The project has an entry on Wikipedia: https://en.wikipedia.org/wiki/HiGHS_optim
 Documentation
 -------------
 
-The rest of this file gives brief documentation for HiGHS. Comprehensive documentation is available via https://www.highs.dev.
+The rest of this file gives brief documentation for HiGHS. Comprehensive documentation is available from [ergo-code.github.io](https://ergo-code.github.io/HiGHS/dev/).
 
 Download
 --------
@@ -70,11 +72,11 @@ a build folder and call CMake as follows
 
     mkdir build
     cd build
-    cmake ..
+    cmake -DFAST_BUILD=ON ..
 
 Then compile the code using
 
-    make
+    cmake --build . 
 
 This installs the executable `bin/highs`.
 The minimum CMake version required is 3.15.
@@ -106,18 +108,20 @@ Usage:
       --presolve arg          Presolve: "choose" by default - "on"/"off" are alternatives.
       --solver arg            Solver: "choose" by default - "simplex"/"ipm" are alternatives.
       --parallel arg          Parallel solve: "choose" by default - "on"/"off" are alternatives.
+      --run_crossover arg     Run crossover after IPM: "on" by default - "choose"/"off" are alternatives.
       --time_limit arg        Run time limit (seconds - double).
       --options_file arg      File containing HiGHS options.
       --solution_file arg     File for writing out model solution.
       --write_model_file arg  File for writing out model.
       --random_seed arg       Seed to initialize random number generation.
-      --ranging arg           Compute cost, bound, RHS and basic solution ranging.
+      --ranging arg           Report cost, bound, RHS and basic solution ranging in any solution file: "off" by default - "on" is alternatives.
+      --read_solution_file    File of solution to be read
       
-  -h, --help                 Print help.
+      --version               Print version number      
+  -h, --help                  Print help.
   
   Note:
   
-  * If the file constrains some variables to take integer values (so the problem is a MIP) and "simplex" or "ipm" is selected for the solver option, then the integrality constraint will be ignored.
   * If the file defines a quadratic term in the objective (so the problem is a QP or MIQP) and "simplex" or "ipm" is selected for the solver option, then the quadratic term will be ignored.
   * If the file constrains some variables to take integer values and defines a quadratic term in the objective, then the problem is MIQP and cannot be solved by HiGHS
 
@@ -179,7 +183,7 @@ An executable defined in the file `use_highs.cpp` (for example) is linked with t
 `LD_LIBRARY_PATH=install_folder/lib/ ./use_highs`
 
 Interfaces
-----------
+==========
 
 Julia
 -----
@@ -191,13 +195,62 @@ Rust
 
 - HiGHS can be used from rust through the [`highs` crate](https://crates.io/crates/highs). The rust linear programming modeler [**good_lp**](https://crates.io/crates/good_lp) supports HiGHS. 
 
+R
+------
+
+- An R interface is available through the [`highs` R package](https://cran.r-project.org/package=highs).
+
 Javascript
 ----------
 
 HiGHS can be used from javascript directly inside a web browser thanks to [highs-js](https://github.com/lovasoa/highs-js). See the [demo](https://lovasoa.github.io/highs-js/) and the [npm package](https://www.npmjs.com/package/highs).
 
+Alternatively, HiGHS can directly be compiled into a single HTML file and used
+in a browser. This requires `emscripten` to be installed from their website
+(unfortunately, e.g. `sudo apt install emscripten` in Ubuntu Linux is broken):
+
+    https://emscripten.org/docs/getting_started/downloads.html
+
+Then, run
+
+    sh build_webdemo.sh
+
+This will create the file `build_webdemo/bin/highs.html`. For fast edit
+iterations run
+
+    find src app | entr -rs 'make -C build_webdemo highs; echo'
+
+This will rebuild `highs.html` every time a source file is modified (e.g.
+from Visual Studio Code).
+
 Python
 ------
+
+There are two ways to build the Python interface to HiGHS. 
+
+__From PyPi__
+
+HiGHS has been added to PyPi, so should be installable using the command 
+
+pip install highspy
+
+The installation can be tested using the example [minimal.py](https://github.com/ERGO-Code/HiGHS/blob/master/examples/minimal.py), yielding the output
+
+    Running HiGHS 1.2.2 [date: 2022-09-04, git hash: 8701dbf19]
+    Copyright (c) 2022 ERGO-Code under MIT licence terms
+    Presolving model
+    2 rows, 2 cols, 4 nonzeros
+    0 rows, 0 cols, 0 nonzeros
+    0 rows, 0 cols, 0 nonzeros
+    Presolve : Reductions: rows 0(-2); columns 0(-2); elements 0(-4) - Reduced to empty
+    Solving the original LP from the solution after postsolve
+    Model   status      : Optimal
+    Objective value     :  1.0000000000e+00
+    HiGHS run time      :          0.00
+
+or the more didactic [call_highs_from_python.py](https://github.com/ERGO-Code/HiGHS/blob/master/examples/call_highs_from_python.py). 
+
+__Directly__
 
 In order to build the Python interface, build and install the HiGHS
 library as described above, ensure the shared library is in the
@@ -212,39 +265,4 @@ You may also require
 * `pip install pybind11`
 * `pip install pyomo`
 
-The Python interface can then be used:
-
-```
-python
->>> import highspy
->>> import numpy as np
->>> inf = highspy.kHighsInf
->>> h = highspy.Highs()
->>> h.addVars(2, np.array([-inf, -inf]), np.array([inf, inf]))
->>> h.changeColsCost(2, np.array([0, 1]), np.array([0, 1], dtype=np.double))
->>> num_cons = 2
->>> lower = np.array([2, 0], dtype=np.double)
->>> upper = np.array([inf, inf], dtype=np.double)
->>> num_new_nz = 4
->>> starts = np.array([0, 2])
->>> indices = np.array([0, 1, 0, 1])
->>> values = np.array([-1, 1, 1, 1], dtype=np.double)
->>> h.addRows(num_cons, lower, upper, num_new_nz, starts, indices, values)
->>> h.setOptionValue('log_to_console', True)
-<HighsStatus.kOk: 0>
->>> h.run()
-
-Presolving model
-2 rows, 2 cols, 4 nonzeros
-0 rows, 0 cols, 0 nonzeros
-0 rows, 0 cols, 0 nonzeros
-Presolve : Reductions: rows 0(-2); columns 0(-2); elements 0(-4) - Reduced to empty
-Solving the original LP from the solution after postsolve
-Model   status      : Optimal
-Objective value     :  1.0000000000e+00
-HiGHS run time      :          0.00
-<HighsStatus.kOk: 0>
->>> sol = h.getSolution()
->>> print(sol.col_value)
-[-1.0, 1.0]
-```
+The Python interface can then be tested as above

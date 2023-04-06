@@ -1,9 +1,9 @@
 #ifndef __SRC_LIB_PRICING_DEVEXHARRISPRICING_HPP__
 #define __SRC_LIB_PRICING_DEVEXHARRISPRICING_HPP__
 
-#include "basis.hpp"
-#include "pricing.hpp"
-#include "runtime.hpp"
+#include "qpsolver/basis.hpp"
+#include "qpsolver/pricing.hpp"
+#include "qpsolver/runtime.hpp"
 
 // 44839, 78965849.088174, 559, 138.681866, 0.000671, 7998
 
@@ -20,7 +20,7 @@ class DevexHarrisPricing : public Pricing {
 
     HighsInt minidx = -1;
     double maxabslambda = 0.0;
-    for (HighsInt i = 0; i < activeconstraintidx.size(); i++) {
+    for (size_t i = 0; i < activeconstraintidx.size(); i++) {
       HighsInt indexinbasis =
           constraintindexinbasisfactor[activeconstraintidx[i]];
       if (indexinbasis == -1) {

@@ -437,7 +437,8 @@ PYBIND11_MODULE(highs_bindings, m) {
       .value("kObjectiveTarget", HighsModelStatus::kObjectiveTarget)
       .value("kTimeLimit", HighsModelStatus::kTimeLimit)
       .value("kIterationLimit", HighsModelStatus::kIterationLimit)
-      .value("kUnknown", HighsModelStatus::kUnknown);
+      .value("kUnknown", HighsModelStatus::kUnknown)
+      .value("kSolutionLimit", HighsModelStatus::kSolutionLimit);
   py::enum_<HighsBasisStatus>(m, "HighsBasisStatus")
       .value("kLower", HighsBasisStatus::kLower)
       .value("kBasic", HighsBasisStatus::kBasic)
@@ -559,6 +560,7 @@ PYBIND11_MODULE(highs_bindings, m) {
       .def_readwrite("presolve", &HighsOptions::presolve)
       .def_readwrite("solver", &HighsOptions::solver)
       .def_readwrite("parallel", &HighsOptions::parallel)
+      .def_readwrite("run_crossover", &HighsOptions::run_crossover)
       .def_readwrite("ranging", &HighsOptions::ranging)
       .def_readwrite("time_limit", &HighsOptions::time_limit)
       .def_readwrite("infinite_cost", &HighsOptions::infinite_cost)
@@ -607,7 +609,6 @@ PYBIND11_MODULE(highs_bindings, m) {
       .def_readwrite("output_flag", &HighsOptions::output_flag)
       .def_readwrite("log_to_console", &HighsOptions::log_to_console)
       .def_readwrite("log_dev_level", &HighsOptions::log_dev_level)
-      .def_readwrite("run_crossover", &HighsOptions::run_crossover)
       .def_readwrite("allow_unbounded_or_infeasible",
                      &HighsOptions::allow_unbounded_or_infeasible)
       .def_readwrite("allowed_matrix_scale_factor",
@@ -652,7 +653,6 @@ PYBIND11_MODULE(highs_bindings, m) {
       .def("postsolve", &Highs::postsolve)
       .def("writeSolution", &highs_writeSolution)
       .def("readSolution", &Highs::readSolution)
-      .def("setSolution", &highs_setSolution)
       .def("writeModel", &Highs::writeModel)
       .def("getPresolvedLp", &Highs::getPresolvedLp)
       .def("getPresolvedModel", &Highs::getPresolvedModel)
@@ -695,7 +695,6 @@ PYBIND11_MODULE(highs_bindings, m) {
       .def("clear", &Highs::clear)
       .def("clearModel", &Highs::clearModel)
       .def("clearSolver", &Highs::clearSolver)
-      .def("checkSolutionFeasibility", &Highs::checkSolutionFeasibility)
       .def("getNumCol", &Highs::getNumCol)
       .def("getNumRow", &Highs::getNumRow)
       .def("getNumNz", &Highs::getNumNz)

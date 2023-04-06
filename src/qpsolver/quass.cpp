@@ -1,26 +1,26 @@
-#include "quass.hpp"
+#include "qpsolver/quass.hpp"
 
 #include <algorithm>
 #include <map>
 
 #include "Highs.h"
-#include "basis.hpp"
-#include "crashsolution.hpp"
-#include "dantzigpricing.hpp"
-#include "devexharrispricing.hpp"
-#include "devexpricing.hpp"
-#include "factor.hpp"
-#include "feasibility.hpp"
-#include "gradient.hpp"
-#include "instance.hpp"
+#include "qpsolver/basis.hpp"
+#include "qpsolver/crashsolution.hpp"
+#include "qpsolver/dantzigpricing.hpp"
+#include "qpsolver/devexharrispricing.hpp"
+#include "qpsolver/devexpricing.hpp"
+#include "qpsolver/factor.hpp"
+#include "qpsolver/feasibility.hpp"
+#include "qpsolver/gradient.hpp"
+#include "qpsolver/instance.hpp"
 #include "lp_data/HighsAnalysis.h"
-#include "ratiotest.hpp"
-#include "reducedcosts.hpp"
-#include "reducedgradient.hpp"
-#include "snippets.hpp"
-#include "steepestedgepricing.hpp"
-#include "scaling.hpp"
-#include "perturbation.hpp"
+#include "qpsolver/ratiotest.hpp"
+#include "qpsolver/reducedcosts.hpp"
+#include "qpsolver/reducedgradient.hpp"
+#include "qpsolver/snippets.hpp"
+#include "qpsolver/steepestedgepricing.hpp"
+#include "qpsolver/scaling.hpp"
+#include "qpsolver/perturbation.hpp"
 
 void Quass::solve() {
   scale(runtime);
@@ -54,7 +54,7 @@ void Quass::loginformation(Runtime& rt, Basis& basis, CholeskyFactor& factor) {
 
 static void tidyup(Vector& p, Vector& rowmove, Basis& basis, Runtime& runtime) {
   for (unsigned acon : basis.getactive()) {
-    if (acon >= runtime.instance.num_con) {
+    if ((HighsInt)acon >= runtime.instance.num_con) {
       p.value[acon - runtime.instance.num_con] = 0.0;
     } else {
       rowmove.value[acon] = 0.0;
@@ -67,25 +67,26 @@ static void computerowmove(Runtime& runtime, Basis& basis, Vector& p,
   runtime.instance.A.mat_vec(p, rowmove);
   return;
   // rowmove.reset();
-  MatrixBase& Atran = runtime.instance.A.t();
-  Atran.vec_mat(p, rowmove);
-  return;
-  for (HighsInt i = 0; i < runtime.instance.num_con; i++) {
-    if (basis.getstatus(i) == BasisStatus::Default) {
-      // check with assertions, is it really the same?
-      double val =
-          p.dot(&Atran.index[Atran.start[i]], &Atran.value[Atran.start[i]],
-                Atran.start[i + 1] - Atran.start[i]);
-      // Vector col = Atran.extractcol(i);
-      // val = col * p;
-
-      // assert(rowmove.value[i] == val);
-      rowmove.value[i] = val;
-    } else {
-      rowmove.value[i] = 0;
-    }
-  }
-  rowmove.resparsify();
+  // Commented out unreachable code
+  //  MatrixBase& Atran = runtime.instance.A.t();
+  //  Atran.vec_mat(p, rowmove);
+  //  return;
+  //  for (HighsInt i = 0; i < runtime.instance.num_con; i++) {
+  //    if (basis.getstatus(i) == BasisStatus::Default) {
+  //      // check with assertions, is it really the same?
+  //      double val =
+  //          p.dot(&Atran.index[Atran.start[i]], &Atran.value[Atran.start[i]],
+  //                Atran.start[i + 1] - Atran.start[i]);
+  //      // Vector col = Atran.extractcol(i);
+  //      // val = col * p;
+  //
+  //      // assert(rowmove.value[i] == val);
+  //      rowmove.value[i] = val;
+  //    } else {
+  //      rowmove.value[i] = 0;
+  //    }
+  //  }
+  //  rowmove.resparsify();
 }
 
 // VECTOR

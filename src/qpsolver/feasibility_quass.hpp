@@ -1,10 +1,11 @@
 #ifndef __SRC_LIB_FEASIBILITYQUASS_HPP__
 #define __SRC_LIB_FEASIBILITYQUASS_HPP__
 
-#include "crashsolution.hpp"
-#include "basis.hpp"
-#include "runtime.hpp"
+#include "qpsolver/crashsolution.hpp"
+#include "qpsolver/basis.hpp"
+#include "qpsolver/runtime.hpp"
 
+inline
 void computestartingpoint_quass(Runtime& runtime, CrashSolution& result) {
   /*
    creates and solves the feasibility problem

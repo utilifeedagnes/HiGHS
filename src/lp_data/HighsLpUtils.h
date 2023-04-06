@@ -58,6 +58,7 @@ HighsStatus assessBounds(const HighsOptions& options, const char* type,
 HighsStatus cleanBounds(const HighsOptions& options, HighsLp& lp);
 
 HighsStatus assessIntegrality(HighsLp& lp, const HighsOptions& options);
+void relaxSemiVariables(HighsLp& lp);
 bool activeModifiedUpperBounds(const HighsOptions& options, const HighsLp& lp,
                                const std::vector<double> col_value);
 
@@ -201,10 +202,30 @@ HighsStatus readSolutionFile(const std::string filename,
                              HighsBasis& basis, HighsSolution& solution,
                              const HighsInt style);
 
-void checkLpSolutionFeasibility(const HighsOptions& options, const HighsLp& lp,
-                                const HighsSolution& solution);
+HighsStatus readSolutionFileErrorReturn(std::ifstream& in_file);
+HighsStatus readSolutionFileReturn(const HighsStatus status,
+                                   HighsSolution& solution, HighsBasis& basis,
+                                   const HighsSolution& read_solution,
+                                   const HighsBasis& read_basis,
+                                   std::ifstream& in_file);
+bool readSolutionFileIgnoreLineOk(std::ifstream& in_file);
+bool readSolutionFileKeywordLineOk(std::string& keyword,
+                                   std::ifstream& in_file);
+bool readSolutionFileHashKeywordIntLineOk(std::string& keyword, HighsInt& value,
+                                          std::ifstream& in_file);
+bool readSolutionFileIdDoubleLineOk(double& value, std::ifstream& in_file);
+bool readSolutionFileIdDoubleIntLineOk(double& value, HighsInt& index,
+                                       std::ifstream& in_file);
 
-HighsStatus calculateRowValues(HighsLp& lp, HighsSolution& solution);
+HighsStatus assessLpPrimalSolution(const HighsOptions& options,
+                                   const HighsLp& lp,
+                                   const HighsSolution& solution, bool& valid,
+                                   bool& integral, bool& feasible);
+
+HighsStatus calculateRowValues(const HighsLp& lp,
+                               const std::vector<double>& col_value,
+                               std::vector<double>& row_value);
+HighsStatus calculateRowValues(const HighsLp& lp, HighsSolution& solution);
 HighsStatus calculateRowValuesQuad(const HighsLp& lp, HighsSolution& solution);
 HighsStatus calculateColDuals(const HighsLp& lp, HighsSolution& solution);
 

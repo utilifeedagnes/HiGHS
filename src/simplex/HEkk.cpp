@@ -692,7 +692,7 @@ HighsStatus HEkk::dualise() {
   // Incorporate the cost shift by subtracting A*primal_bound from the
   // cost vector; compute the objective offset
   double delta_offset = 0;
-  for (HighsInt iX = 0; iX < primal_bound_index.size(); iX++) {
+  for (size_t iX = 0; iX < primal_bound_index.size(); iX++) {
     HighsInt iCol = primal_bound_index[iX];
     double multiplier = primal_bound_value[iX];
     delta_offset += multiplier * original_col_cost_[iCol];
@@ -710,7 +710,7 @@ HighsStatus HEkk::dualise() {
     // ToDo Make this more efficient?
     vector<double> primal_bound;
     primal_bound.assign(original_num_col_, 0);
-    for (HighsInt iX = 0; iX < primal_bound_index.size(); iX++)
+    for (size_t iX = 0; iX < primal_bound_index.size(); iX++)
       primal_bound[primal_bound_index[iX]] = primal_bound_value[iX];
 
     for (HighsInt iCol = 0; iCol < extra_columns.num_col_; iCol++) {
@@ -2082,7 +2082,7 @@ void HEkk::computeDualSteepestEdgeWeights(const bool initial) {
   const HighsInt num_row = lp_.num_row_;
   HVector row_ep;
   row_ep.setup(num_row);
-  assert(dual_edge_weight_.size() >= num_row);
+  assert((HighsInt)dual_edge_weight_.size() >= num_row);
   for (HighsInt iRow = 0; iRow < num_row; iRow++)
     dual_edge_weight_[iRow] = computeDualSteepestEdgeWeight(iRow, row_ep);
   if (analysis_.analyse_simplex_time) {
@@ -2221,7 +2221,7 @@ void HEkk::updateDualSteepestEdgeWeights(
         (int)num_row);
     fflush(stdout);
   }
-  assert(dual_edge_weight_.size() >= num_row);
+  assert((HighsInt)dual_edge_weight_.size() >= num_row);
   HighsInt to_entry;
   const bool use_row_indices =
       simplex_nla_.sparseLoopStyle(column_count, num_row, to_entry);
@@ -2275,7 +2275,7 @@ void HEkk::updateDualDevexWeights(const HVector* column,
         (int)num_row);
     fflush(stdout);
   }
-  assert(dual_edge_weight_.size() >= num_row);
+  assert((HighsInt)dual_edge_weight_.size() >= num_row);
   HighsInt to_entry;
   const bool use_row_indices =
       simplex_nla_.sparseLoopStyle(column_count, num_row, to_entry);
@@ -2673,12 +2673,18 @@ void HEkk::initialiseBound(const SimplexAlgorithm algorithm,
   const HighsInt num_tot = lp_.num_col_ + lp_.num_row_;
   for (HighsInt iCol = 0; iCol < num_tot; iCol++) {
     if (info_.workLower_[iCol] == -inf && info_.workUpper_[iCol] == inf) {
-      // Don't change for row variables: they should never become
-      // nonbasic when starting from a logical basis, and no crash
-      // should make a free row nonbasic, but could an advanced basis
-      // make a free row nonbasic.
-      // But what it it happened?
-      if (iCol >= lp_.num_col_) continue;
+      // Phase 1 bounds were not modified for free rows in hsol. Why?
+      // To reduce the number of free variables on the assumption that
+      // free rows should never be nonbasic? This is normally true
+      // when starting from a logical basis or crash - unless
+      // singularity makes a free logical nonbasic - but what about an
+      // advanced basis start? It doesn't happen with the HiGHS MIP
+      // solver. However, SCIP cut handling can lead to a nonbasic row
+      // with nonzero dual being made free and, particularly if it's
+      // (then) the only dual infeasibility, phase 1 fails to remove
+      // it.
+      //
+      // if (iCol >= lp_.num_col_) continue;
       info_.workLower_[iCol] = -1000,
       info_.workUpper_[iCol] = 1000;  // FREE
     } else if (info_.workLower_[iCol] == -inf) {
@@ -3864,11 +3870,11 @@ double HEkk::factorSolveError() {
   btran_rhs.clear();
   vector<double> btran_solution;
   btran_solution.assign(num_row, 0);
-  for (HighsInt iX = 0; iX < solution_value.size(); iX++)
+  for (size_t iX = 0; iX < solution_value.size(); iX++)
     btran_solution[solution_index[iX]] = solution_value[iX];
   vector<double> btran_scattered_rhs;
   btran_scattered_rhs.assign(num_col + num_row, 0);
-  for (HighsInt iX = 0; iX < solution_value.size(); iX++) {
+  for (size_t iX = 0; iX < solution_value.size(); iX++) {
     HighsInt iRow = solution_index[iX];
     for (HighsInt iEl = ar_matrix.p_end_[iRow];
          iEl < ar_matrix.start_[iRow + 1]; iEl++) {
@@ -3891,12 +3897,12 @@ double HEkk::factorSolveError() {
   btran(btran_rhs, expected_density);
 
   double ftran_solution_error = 0;
-  for (HighsInt iX = 0; iX < solution_value.size(); iX++)
+  for (size_t iX = 0; iX < solution_value.size(); iX++)
     ftran_solution_error =
         max(fabs(ftran_rhs.array[solution_index[iX]] - solution_value[iX]),
             ftran_solution_error);
   double btran_solution_error = 0;
-  for (HighsInt iX = 0; iX < solution_value.size(); iX++)
+  for (size_t iX = 0; iX < solution_value.size(); iX++)
     btran_solution_error =
         max(fabs(btran_rhs.array[solution_index[iX]] - solution_value[iX]),
             btran_solution_error);
@@ -3908,19 +3914,26 @@ void HEkk::clearBadBasisChange(const BadBasisChangeReason reason) {
   if (reason == BadBasisChangeReason::kAll) {
     bad_basis_change_.clear();
   } else {
-    const HighsInt num_bad_basis_change = bad_basis_change_.size();
-    HighsInt new_num_bad_basis_change = 0;
-    for (HighsInt Ix = 0; Ix < num_bad_basis_change; Ix++) {
-      HighsSimplexBadBasisChangeRecord& record = bad_basis_change_[Ix];
-      if (record.reason == reason) continue;
-      bad_basis_change_[new_num_bad_basis_change++] = record;
-    }
-    // Windows doesn't like to resize to zero?
-    if (new_num_bad_basis_change > 0) {
-      bad_basis_change_.resize(new_num_bad_basis_change);
-    } else {
-      bad_basis_change_.clear();
-    }
+    bad_basis_change_.erase(
+        std::remove_if(
+            bad_basis_change_.begin(), bad_basis_change_.end(),
+            [reason](const HighsSimplexBadBasisChangeRecord& record) {
+              return record.reason == reason;
+            }),
+        bad_basis_change_.end());
+  }
+}
+
+void HEkk::updateBadBasisChange(const HVector& col_aq, double theta_primal) {
+  if (!bad_basis_change_.empty()) {
+    bad_basis_change_.erase(
+        std::remove_if(bad_basis_change_.begin(), bad_basis_change_.end(),
+                       [&](const HighsSimplexBadBasisChangeRecord& record) {
+                         return std::fabs(col_aq.array[record.row_out] *
+                                          theta_primal) >=
+                                options_->primal_feasibility_tolerance;
+                       }),
+        bad_basis_change_.end());
   }
 }
 
@@ -3978,7 +3991,7 @@ bool HEkk::tabooBadBasisChange() {
 
 void HEkk::applyTabooRowOut(vector<double>& values,
                             const double overwrite_with) {
-  assert(values.size() >= lp_.num_row_);
+  assert((HighsInt)values.size() >= lp_.num_row_);
   for (HighsInt iX = 0; iX < (HighsInt)bad_basis_change_.size(); iX++) {
     if (bad_basis_change_[iX].taboo) {
       HighsInt iRow = bad_basis_change_[iX].row_out;
@@ -3989,7 +4002,7 @@ void HEkk::applyTabooRowOut(vector<double>& values,
 }
 
 void HEkk::unapplyTabooRowOut(vector<double>& values) {
-  assert(values.size() >= lp_.num_row_);
+  assert((HighsInt)values.size() >= lp_.num_row_);
   // Unapply taboo rows in opposite order in case the row appears
   // twice in the list. This way the first saved value for the row is
   // what remains, not overwrite_with
@@ -4001,7 +4014,7 @@ void HEkk::unapplyTabooRowOut(vector<double>& values) {
 
 void HEkk::applyTabooVariableIn(vector<double>& values,
                                 const double overwrite_with) {
-  assert(values.size() >= lp_.num_col_ + lp_.num_row_);
+  assert((HighsInt)values.size() >= lp_.num_col_ + lp_.num_row_);
   for (HighsInt iX = 0; iX < (HighsInt)bad_basis_change_.size(); iX++) {
     if (bad_basis_change_[iX].taboo) {
       HighsInt iCol = bad_basis_change_[iX].variable_in;
@@ -4012,7 +4025,7 @@ void HEkk::applyTabooVariableIn(vector<double>& values,
 }
 
 void HEkk::unapplyTabooVariableIn(vector<double>& values) {
-  assert(values.size() >= lp_.num_col_ + lp_.num_row_);
+  assert((HighsInt)values.size() >= lp_.num_col_ + lp_.num_row_);
   // Unapply taboo variables in opposite order in case the row appears
   // twice in the list. This way the first saved value for the
   // variable is what remains, not overwrite_with
@@ -4201,7 +4214,8 @@ bool HEkk::proofOfPrimalInfeasibility(HVector& row_ep, const HighsInt move_out,
         sumInf += value;
         if (sumInf > options_->small_matrix_value) break;
         continue;
-        if (value <= options_->small_matrix_value) continue;
+        // Commented out unreachable code
+        //        if (value <= options_->small_matrix_value) continue;
       }
       implied_upper += value * lp.col_upper_[iCol];
     } else {
@@ -4248,7 +4262,7 @@ double HEkk::getValueScale(const HighsInt count, const vector<double>& value) {
 double HEkk::getMaxAbsRowValue(HighsInt row) {
   if (!status_.has_ar_matrix) initialisePartitionedRowwiseMatrix();
 
-  double val = 0.0;
+  double val = -1.0;
   for (HighsInt i = ar_matrix_.start_[row]; i < ar_matrix_.start_[row + 1]; ++i)
     val = std::max(val, std::abs(ar_matrix_.value_[i]));
 

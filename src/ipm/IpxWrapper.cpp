@@ -78,7 +78,7 @@ HighsStatus solveLpIpx(const HighsOptions& options,
   //
   // Set display according to output
   parameters.display = 1;
-  if (!options.output_flag) parameters.display = 0;
+  if (!options.output_flag | !options.log_to_console) parameters.display = 0;
   // Modify parameters.debug according to log_dev_level
   parameters.debug = 0;
   if (options.log_dev_level == kHighsLogDevLevelDetailed) {
@@ -96,18 +96,25 @@ HighsStatus solveLpIpx(const HighsOptions& options,
                                        options.dual_feasibility_tolerance);
 
   parameters.ipm_optimality_tol = options.ipm_optimality_tolerance;
-  parameters.crossover_start = options.start_crossover_tolerance;
+  parameters.start_crossover_tol = options.start_crossover_tolerance;
   parameters.analyse_basis_data = kHighsAnalysisLevelNlaData & options.highs_analysis_level;
   // Determine the run time allowed for IPX
   parameters.time_limit = options.time_limit - timer.readRunHighsClock();
   parameters.ipm_maxiter = options.ipm_iteration_limit - highs_info.ipm_iteration_count;
   // Determine if crossover is to be run or not
-  parameters.crossover = options.run_crossover;
-  if (!parameters.crossover) {
-    // If crossover is not run, then set crossover_start to -1 so that
-    // IPX can terminate according to its feasibility and optimality
-    // tolerances
-    parameters.crossover_start = -1;
+  if (options.run_crossover == kHighsOnString) {
+    parameters.run_crossover = 1;
+  } else if (options.run_crossover == kHighsOffString) {
+    parameters.run_crossover = 0;
+  } else {
+    assert(options.run_crossover == kHighsChooseString);
+    parameters.run_crossover = -1;
+  }
+  if (!parameters.run_crossover) {
+    // If crossover is sure not to be run, then set crossover_start to
+    // -1 so that IPX can terminate according to its feasibility and
+    // optimality tolerances
+    parameters.start_crossover_tol = -1;
   }
 
   // Set the internal IPX parameters
@@ -138,7 +145,7 @@ HighsStatus solveLpIpx(const HighsOptions& options,
 
   const bool report_solve_data = kHighsAnalysisLevelSolverSummaryData & options.highs_analysis_level;
   // Get solver and solution information.
-  // Struct ipx_info defined in ipx/include/ipx_info.h
+  // Struct ipx_info defined in ipx/ipx_info.h
   const ipx::Info ipx_info = lps.GetInfo();
   if (report_solve_data) reportSolveData(options.log_options, ipx_info);
   highs_info.ipm_iteration_count += (HighsInt)ipx_info.iter;
@@ -485,45 +492,37 @@ HighsStatus reportIpxSolveStatus(const HighsOptions& options,
   } else if (solve_status == IPX_STATUS_stopped) {
     highsLogUser(options.log_options, HighsLogType::kWarning, "Ipx: Stopped\n");
     return HighsStatus::kWarning;
+    // Remaining cases are errors so drop through to return HighsStatus::kError;
   } else if (solve_status == IPX_STATUS_no_model) {
     if (error_flag == IPX_ERROR_argument_null) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Ipx: Invalid input - argument_null\n");
-      return HighsStatus::kError;
     } else if (error_flag == IPX_ERROR_invalid_dimension) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Ipx: Invalid input - invalid dimension\n");
-      return HighsStatus::kError;
     } else if (error_flag == IPX_ERROR_invalid_matrix) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Ipx: Invalid input - invalid matrix\n");
-      return HighsStatus::kError;
     } else if (error_flag == IPX_ERROR_invalid_vector) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Ipx: Invalid input - invalid vector\n");
-      return HighsStatus::kError;
     } else if (error_flag == IPX_ERROR_invalid_basis) {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Ipx: Invalid input - invalid basis\n");
-      return HighsStatus::kError;
     } else {
       highsLogUser(options.log_options, HighsLogType::kError,
                    "Ipx: Invalid input - unrecognised error\n");
-      return HighsStatus::kError;
     }
   } else if (solve_status == IPX_STATUS_out_of_memory) {
     highsLogUser(options.log_options, HighsLogType::kError,
                  "Ipx: Out of memory\n");
-    return HighsStatus::kError;
   } else if (solve_status == IPX_STATUS_internal_error) {
     highsLogUser(options.log_options, HighsLogType::kError,
                  "Ipx: Internal error %" HIGHSINT_FORMAT "\n", (int)error_flag);
-    return HighsStatus::kError;
   } else {
     highsLogUser(options.log_options, HighsLogType::kError,
                  "Ipx: unrecognised solve status = %" HIGHSINT_FORMAT "\n",
                  (int)solve_status);
-    return HighsStatus::kError;
   }
   return HighsStatus::kError;
 }
@@ -537,14 +536,15 @@ HighsStatus reportIpxIpmCrossoverStatus(const HighsOptions& options,
   else
     method_name = "Crossover";
   if (status == IPX_STATUS_not_run) {
-    if (ipm_status || options.run_crossover) {
-      // Warn if method not run is IPM or run_crossover option is true
+    if (ipm_status || options.run_crossover == kHighsOnString) {
+      // Warn if method not run is IPM or method not run is crossover
+      // and run_crossover option is "on"
       highsLogUser(options.log_options, HighsLogType::kWarning,
 		   "Ipx: %s not run\n", method_name.c_str());
       return HighsStatus::kWarning;
     }
     // OK if method not run is crossover and run_crossover option is
-    // false!
+    // not "on"
     return HighsStatus::kOk;
   } else if (status == IPX_STATUS_optimal) {
     highsLogUser(options.log_options, HighsLogType::kInfo, "Ipx: %s optimal\n",

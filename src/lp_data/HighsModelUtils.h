@@ -16,14 +16,14 @@
 #ifndef LP_DATA_HIGHSMODELUTILS_H_
 #define LP_DATA_HIGHSMODELUTILS_H_
 
-//#include "Highs.h"
-//#include "lp_data/HighsStatus.h"
+// #include "Highs.h"
+// #include "lp_data/HighsStatus.h"
 #include "lp_data/HighsInfo.h"
 #include "model/HighsModel.h"
-//#include "lp_data/HStruct.h"
-//#include "lp_data/HighsInfo.h"
-//#include "lp_data/HighsLp.h"
-//#include "lp_data/HighsOptions.h"
+// #include "lp_data/HStruct.h"
+// #include "lp_data/HighsInfo.h"
+// #include "lp_data/HighsLp.h"
+// #include "lp_data/HighsOptions.h"
 
 // Analyse lower and upper bounds of a model
 void analyseModelBounds(const HighsLogOptions& log_options, const char* message,
@@ -41,7 +41,8 @@ void writeModelBoundSolution(
     const std::vector<HighsBasisStatus>& status,
     const HighsVarType* integrality = NULL);
 void writeModelSolution(FILE* file, const HighsLp& lp,
-                        const HighsSolution& solution, const HighsInfo& info);
+                        const HighsSolution& solution, const HighsInfo& info,
+                        const bool sparse);
 
 HighsInt maxNameLength(const HighsInt num_name,
                        const std::vector<std::string>& names);

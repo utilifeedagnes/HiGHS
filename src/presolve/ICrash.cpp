@@ -19,9 +19,9 @@
 #include <iomanip>
 #include <sstream>
 
-#include "HighsStatus.h"
 #include "io/HighsIO.h"
 #include "lp_data/HighsLpUtils.h"
+#include "lp_data/HighsStatus.h"
 #include "presolve/ICrashUtil.h"
 #include "util/HighsUtils.h"
 #include "util/stringutil.h"
@@ -242,7 +242,7 @@ void updateParameters(Quadratic& idata, const ICrashOptions& options,
   }
 }
 
-void solveSubproblemICA(Quadratic& idata, const ICrashOptions& options) {
+static void solveSubproblemICA(Quadratic& idata, const ICrashOptions& options) {
   bool minor_iteration_details = false;
 
   std::vector<double> residual_ica(idata.lp.num_row_, 0);
@@ -284,7 +284,7 @@ void solveSubproblemICA(Quadratic& idata, const ICrashOptions& options) {
   }
 }
 
-void solveSubproblemQP(Quadratic& idata, const ICrashOptions& options) {
+static void solveSubproblemQP(Quadratic& idata, const ICrashOptions& options) {
   bool minor_iteration_details = false;
 
   calculateRowValues(idata.lp, idata.xk);
@@ -400,6 +400,7 @@ void reportOptions(const ICrashOptions& options) {
 HighsStatus callICrash(const HighsLp& lp, const ICrashOptions& options,
                        ICrashInfo& result) {
   if (!checkOptions(lp, options)) return HighsStatus::kError;
+  assert(lp.a_matrix_.isColwise());
 
   // Initialize data structures and initial values.
   Quadratic idata = parseOptions(lp, options);

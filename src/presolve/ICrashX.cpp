@@ -36,8 +36,8 @@ HighsStatus callCrossover(const HighsOptions& options, const HighsLp& lp,
   const HighsLogOptions& log_options = options.log_options;
 
   ipx::Parameters parameters;
-  parameters.crossover = true;
-  parameters.crash_basis = 1;  // 0 = slack basis; 1 = crash basis
+  parameters.run_crossover = 1;  // 1 = "on"
+  parameters.crash_basis = 1;    // 0 = slack basis; 1 = crash basis
   parameters.display = 1;
   if (!options.output_flag) parameters.display = 0;
   // Modify parameters.debug according to log_dev_level
@@ -88,8 +88,9 @@ HighsStatus callCrossover(const HighsOptions& options, const HighsLp& lp,
     }
   }
   ipx::Int crossover_status;
-  if (highs_solution.dual_valid && highs_solution.col_dual.size() == num_col &&
-      highs_solution.row_dual.size() == num_row) {
+  if (highs_solution.dual_valid &&
+      (HighsInt)highs_solution.col_dual.size() == num_col &&
+      (HighsInt)highs_solution.row_dual.size() == num_row) {
     highsLogUser(log_options, HighsLogType::kInfo,
                  "Calling IPX crossover with primal and dual values\n");
     crossover_status = lps.CrossoverFromStartingPoint(

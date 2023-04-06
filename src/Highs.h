@@ -26,6 +26,21 @@
 #include "presolve/PresolveComponent.h"
 
 /**
+ * @brief Return the version as a string
+ */
+std::string highsVersion();
+
+/**
+ * @brief Return detailed version information, githash and compilation
+ * date
+ */
+HighsInt highsVersionMajor();
+HighsInt highsVersionMinor();
+HighsInt highsVersionPatch();
+std::string highsGithash();
+std::string highsCompilationDate();
+
+/**
  * @brief Class to set parameters and run HiGHS
  */
 class Highs {
@@ -140,18 +155,22 @@ class Highs {
   /**
    * @brief Write the current solution to a file in a given style
    */
-  HighsStatus writeSolution(const std::string& filename, const HighsInt style);
+  HighsStatus writeSolution(const std::string& filename,
+                            const HighsInt style = kSolutionStyleRaw);
 
   /**
    * @brief Read a HiGHS solution file in a given style
    */
-  HighsStatus readSolution(const std::string& filename, const HighsInt style);
+  HighsStatus readSolution(const std::string& filename,
+                           const HighsInt style = kSolutionStyleRaw);
 
   /**
-   * @brief Check the feasibility of the current solution. Of value
-   * after calling Highs::readSolution
+   * @brief Assess the validity, integrality and feasibility of the
+   * current primal solution. Of value after calling
+   * Highs::readSolution
    */
-  HighsStatus checkSolutionFeasibility();
+  HighsStatus assessPrimalSolution(bool& valid, bool& integral,
+                                   bool& feasible) const;
 
   /**
    * Methods for HiGHS option input/output
@@ -1118,6 +1137,8 @@ class Highs {
     this->model_.hessian_.exactResize();
   }
 
+  HighsStatus assignContinuousAtDiscreteSolution();
+
   HighsStatus callSolveLp(HighsLp& lp, const string message);
   HighsStatus callSolveQp();
   HighsStatus callSolveMip();
@@ -1178,6 +1199,8 @@ class Highs {
   // Invalidates ekk_instance_
   void invalidateEkk();
 
+  HighsStatus returnFromWriteSolution(FILE* file,
+                                      const HighsStatus return_status);
   HighsStatus returnFromRun(const HighsStatus return_status);
   HighsStatus returnFromHighs(const HighsStatus return_status);
   void reportSolvedLpQpStats();

@@ -169,7 +169,7 @@ class HEkk {
   HighsInt return_primal_solution_status_;
   HighsInt return_dual_solution_status_;
 
-  // Data to be retained after proving primal infeasiblilty
+  // Data to be retained after proving primal infeasibility
   vector<HighsInt> proof_index_;
   vector<double> proof_value_;
 
@@ -303,6 +303,7 @@ class HEkk {
 
   void clearBadBasisChange(
       const BadBasisChangeReason reason = BadBasisChangeReason::kAll);
+  void updateBadBasisChange(const HVector& col_aq, double theta_primal);
 
   HighsInt addBadBasisChange(const HighsInt row_out,
                              const HighsInt variable_out,
