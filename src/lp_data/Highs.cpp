@@ -2537,7 +2537,7 @@ HighsStatus Highs::readSolution(const std::string& filename,
 }
 
 HighsStatus Highs::assessPrimalSolution(bool& valid, bool& integral,
-                                        bool& feasible) const {
+                                        bool& feasible) {
   return assessLpPrimalSolution(options_, model_.lp_, solution_, valid,
                                 integral, feasible);
 }

@@ -169,8 +169,7 @@ class Highs {
    * current primal solution. Of value after calling
    * Highs::readSolution
    */
-  HighsStatus assessPrimalSolution(bool& valid, bool& integral,
-                                   bool& feasible) const;
+  HighsStatus assessPrimalSolution(bool& valid, bool& integral, bool& feasible);
 
   /**
    * Methods for HiGHS option input/output

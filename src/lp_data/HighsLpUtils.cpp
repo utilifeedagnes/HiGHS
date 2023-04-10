@@ -1968,7 +1968,7 @@ void analyseLp(const HighsLogOptions& log_options, const HighsLp& lp) {
 }
 
 HighsStatus readSolutionFile(const std::string filename,
-                             const HighsOptions& options, const HighsLp& lp,
+                             const HighsOptions& options, HighsLp& lp,
                              HighsBasis& basis, HighsSolution& solution,
                              const HighsInt style) {
   const HighsLogOptions& log_options = options.log_options;
@@ -2223,8 +2223,7 @@ bool readSolutionFileIdDoubleIntLineOk(double& value, HighsInt& index,
   return true;
 }
 
-HighsStatus assessLpPrimalSolution(const HighsOptions& options,
-                                   const HighsLp& lp,
+HighsStatus assessLpPrimalSolution(const HighsOptions& options, HighsLp& lp,
                                    const HighsSolution& solution, bool& valid,
                                    bool& integral, bool& feasible) {
   valid = false;
@@ -2485,7 +2484,7 @@ HighsStatus calculateColDuals(const HighsLp& lp, HighsSolution& solution) {
   return HighsStatus::kOk;
 }
 
-HighsStatus calculateRowValues(const HighsLp& lp,
+HighsStatus calculateRowValues(HighsLp& lp,
                                const std::vector<double>& col_value,
                                std::vector<double>& row_value) {
   // assert(col_value.size() > 0);
@@ -2513,7 +2512,7 @@ HighsStatus calculateRowValues(const HighsLp& lp,
   return HighsStatus::kOk;
 }
 
-HighsStatus calculateRowValues(const HighsLp& lp, HighsSolution& solution) {
+HighsStatus calculateRowValues(HighsLp& lp, HighsSolution& solution) {
   return calculateRowValues(lp, solution.col_value, solution.row_value);
 }
 

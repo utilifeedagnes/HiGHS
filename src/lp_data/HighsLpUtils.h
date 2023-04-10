@@ -198,7 +198,7 @@ void getLpMatrixCoefficient(const HighsLp& lp, const HighsInt row,
 void analyseLp(const HighsLogOptions& log_options, const HighsLp& lp);
 
 HighsStatus readSolutionFile(const std::string filename,
-                             const HighsOptions& options, const HighsLp& lp,
+                             const HighsOptions& options, HighsLp& lp,
                              HighsBasis& basis, HighsSolution& solution,
                              const HighsInt style);
 
@@ -217,15 +217,14 @@ bool readSolutionFileIdDoubleLineOk(double& value, std::ifstream& in_file);
 bool readSolutionFileIdDoubleIntLineOk(double& value, HighsInt& index,
                                        std::ifstream& in_file);
 
-HighsStatus assessLpPrimalSolution(const HighsOptions& options,
-                                   const HighsLp& lp,
+HighsStatus assessLpPrimalSolution(const HighsOptions& options, HighsLp& lp,
                                    const HighsSolution& solution, bool& valid,
                                    bool& integral, bool& feasible);
 
-HighsStatus calculateRowValues(const HighsLp& lp,
+HighsStatus calculateRowValues(HighsLp& lp,
                                const std::vector<double>& col_value,
                                std::vector<double>& row_value);
-HighsStatus calculateRowValues(const HighsLp& lp, HighsSolution& solution);
+HighsStatus calculateRowValues(HighsLp& lp, HighsSolution& solution);
 HighsStatus calculateRowValuesQuad(const HighsLp& lp, HighsSolution& solution);
 HighsStatus calculateColDuals(const HighsLp& lp, HighsSolution& solution);
 
