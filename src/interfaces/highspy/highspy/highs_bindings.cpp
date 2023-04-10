@@ -653,6 +653,7 @@ PYBIND11_MODULE(highs_bindings, m) {
       .def("postsolve", &Highs::postsolve)
       .def("writeSolution", &highs_writeSolution)
       .def("readSolution", &Highs::readSolution)
+      .def("setSolution", &highs_setSolution)
       .def("writeModel", &Highs::writeModel)
       .def("getPresolvedLp", &Highs::getPresolvedLp)
       .def("getPresolvedModel", &Highs::getPresolvedModel)
