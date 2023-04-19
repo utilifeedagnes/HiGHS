@@ -27,8 +27,8 @@ try:
             sources=["highspy/highs_bindings.cpp"],
             language="c++",
             include_dirs=[highs_include_dir],
-            library_dirs=[highs_lib_dir, "z"],
-            libraries=["highs"],
+            library_dirs=[highs_lib_dir],
+            libraries=["highs", "z"],
         )
     )
 
