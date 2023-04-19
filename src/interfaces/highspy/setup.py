@@ -28,7 +28,7 @@ try:
             language="c++",
             include_dirs=[highs_include_dir],
             library_dirs=[highs_lib_dir],
-            libraries=["highs"],
+            libraries=["highs", "z"],
         )
     )
 

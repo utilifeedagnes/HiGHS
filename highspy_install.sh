@@ -10,7 +10,7 @@ cmake -E make_directory ${BASEDIR}/build
 cmake -E make_directory ${BASEDIR}/install
 cd $BASEDIR/build
 
-cmake $BASEDIR -DCMAKE_INSTALL_PREFIX=${BASEDIR}/install/highs -DFAST_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake $BASEDIR -DCMAKE_INSTALL_PREFIX=${BASEDIR}/install/highs -DFAST_BUILD=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ZLIB=ON
 cmake --build . --parallel 
 cmake --install .
 
