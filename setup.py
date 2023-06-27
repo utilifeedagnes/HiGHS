@@ -25,7 +25,7 @@ try:
                                         language='c++',
                                         include_dirs=[highs_include_dir],
                                         library_dirs=[highs_lib_dir],
-                                        libraries=['highs']))
+                                        libraries=['highs', 'z']))
     
     setup(name='highspy',
           version='1.5.3',
