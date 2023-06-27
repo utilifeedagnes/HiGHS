@@ -1,3 +1,4 @@
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -115,6 +116,12 @@ HighsStatus highs_passHessianPointers(Highs* h, const int dim, const int num_nz,
 HighsStatus highs_writeSolution(Highs* h, const std::string filename,
                                 const int style) {
   return h->writeSolution(filename, style);
+}
+
+void highs_setSolution(Highs* h, const HighsSolution& sol) {
+  HighsStatus status = h->setSolution(sol);
+  if (status != HighsStatus::kOk)
+    throw py::value_error("Error when setting solution");
 }
 
 // Not needed once getModelStatus(const bool scaled_model) disappears
