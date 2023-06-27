@@ -799,6 +799,7 @@ PYBIND11_MODULE(highs_bindings, m) {
       .def("run", &Highs::run)
       .def("postsolve", &Highs::postsolve)
       .def("writeSolution", &highs_writeSolution)
+      .def("setSolution", &highs_setSolution)
       .def("readSolution", &Highs::readSolution)
       .def("setOptionValue",
            static_cast<HighsStatus (Highs::*)(const std::string&, const bool)>(
